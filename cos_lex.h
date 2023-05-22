@@ -23,9 +23,10 @@ public:
 typedef enum {
 	SEND,
 	VAR,
+	RAND,
 } CCommand_T; //CosmoltiCommand (RAW) {FINAL ONLY, NO AFTER-COMMAND}
 
-std::vector<std::string> CCommands = { "print", "var"};
+std::vector<std::string> CCommands = { "print", "var", "rand"};
 
 class CCommand {
 public:
@@ -67,11 +68,12 @@ namespace Lexer {
 			printf("stret");
 			return 0;
 		}
-		if (Math::MathLex::isNum(args[0]))
+		if (Math::MathLex::isDouble(args[0]))
 		{
 			printf("numret");
 			return 1;
 		}
+		printf("varret");
 		return 2; //assume variable type
 
 	}
