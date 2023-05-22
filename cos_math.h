@@ -14,13 +14,34 @@ Written by AwesomeMc101
 namespace Math
 {
 	namespace MathLex {
-		bool isNum(std::string x)
+		bool isNum(std::string x) /* no longer used; refer to isDouble() */
 		{
 			for (char c : x)
 			{
 				if (c != '1' && c != '2' && c != '3' && c != '4' && c != '5' &&
 					c != '6' && c != '7' && c != '8' && c != '9' && c != '0')
 				{
+					return false;
+				}
+			}
+			return true;
+		}
+		bool isDouble(std::string x)
+		{
+			for (int i = 0; i < x.length(); i++)
+			{
+				char c = x[i];
+
+				if (c != '1' && c != '2' && c != '3' && c != '4' && c != '5' &&
+					c != '6' && c != '7' && c != '8' && c != '9' && c != '0')
+				{
+					if (i > 0)
+					{
+						if (c == '.')
+						{
+							continue;
+						}
+					}
 					return false;
 				}
 			}
@@ -55,12 +76,12 @@ namespace Math
 
 				if (args[i] == "+")
 				{
-					if (MathLex::isNum(args[i - 1]) && MathLex::isNum(args[i + 1]))
+					if (MathLex::isDouble(args[i - 1]) && MathLex::isDouble(args[i + 1]))
 					{
-						int a = std::stoi(args[i - 1]);
-						int b = std::stoi(args[i + 1]);
+						double a = std::stod(args[i - 1]);
+						double b = std::stod(args[i + 1]);
 
-						int solution = a + b;
+						double solution = a + b;
 
 						nargs.clear();
 						nargs.push_back(std::to_string(solution));
@@ -73,12 +94,12 @@ namespace Math
 				}
 				if (args[i] == "-")
 				{
-					if (MathLex::isNum(args[i - 1]) && MathLex::isNum(args[i + 1]))
+					if (MathLex::isDouble(args[i - 1]) && MathLex::isDouble(args[i + 1]))
 					{
-						int a = std::stoi(args[i - 1]);
-						int b = std::stoi(args[i + 1]);
+						double a = std::stod(args[i - 1]);
+						double b = std::stod(args[i + 1]);
 
-						int solution = a - b;
+						double solution = a - b;
 
 						nargs.clear();
 						nargs.push_back(std::to_string(solution));
@@ -91,12 +112,12 @@ namespace Math
 				}
 				if (args[i] == "*")
 				{
-					if (MathLex::isNum(args[i - 1]) && MathLex::isNum(args[i + 1]))
+					if (MathLex::isDouble(args[i - 1]) && MathLex::isDouble(args[i + 1]))
 					{
-						int a = std::stoi(args[i - 1]);
-						int b = std::stoi(args[i + 1]);
+						double a = std::stod(args[i - 1]);
+						double b = std::stod(args[i + 1]);
 
-						int solution = a * b;
+						double solution = a * b;
 
 						nargs.clear();
 						nargs.push_back(std::to_string(solution));
@@ -110,12 +131,30 @@ namespace Math
 				}
 				if (args[i] == "/")
 				{
-					if (MathLex::isNum(args[i - 1]) && MathLex::isNum(args[i + 1]))
+					if (MathLex::isDouble(args[i - 1]) && MathLex::isDouble(args[i + 1]))
 					{
-						int a = std::stoi(args[i - 1]);
-						int b = std::stoi(args[i + 1]);
+						double a = std::stod(args[i - 1]);
+						double b = std::stod(args[i + 1]);
 
-						int solution = a / b;
+						double solution = a / b;
+
+						nargs.clear();
+						nargs.push_back(std::to_string(solution));
+						args[i + 1] = std::to_string(solution);;
+					}
+					else
+					{
+						printf("err: DIVERROR\n");
+					}
+				}
+				if (args[i] == "^")
+				{
+					if (MathLex::isDouble(args[i - 1]) && MathLex::isDouble(args[i + 1]))
+					{
+						double a = std::stod(args[i - 1]);
+						double b = std::stod(args[i + 1]);
+
+						double solution = pow(a,b);
 
 						nargs.clear();
 						nargs.push_back(std::to_string(solution));
