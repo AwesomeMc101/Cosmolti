@@ -31,12 +31,24 @@ namespace Concat {
 			}
 			if (args[i] == "-")
 			{
-				printf("Concat - (incomplete)\n");
+				//printf("Concat - (incomplete)\n");
 				if (i < 1)
 				{
 					continue;
 				}
 
+				std::string tempLoad = args[i - 1];
+
+				size_t loc = tempLoad.find(args[i + 1]);
+				if (loc == std::string::npos)
+				{
+					printf("Unable to subtract string due to error locating it.\n");
+					args[i + 1] = tempLoad;
+				}
+				tempLoad.erase(loc, (args[i + 1].length()));
+				newArgs.clear();
+				newArgs.push_back(tempLoad);
+				args[i + 1] = tempLoad;
 				//newArgs.push_back(args[i - 1] + args[i + 1]);
 				//i++;
 			}
