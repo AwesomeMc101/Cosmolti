@@ -14,6 +14,7 @@ Written by AwesomeMc101
 #include <iostream>
 
 #include "cos_var.h"
+#include "cos_func.h"
 
 class lexedCode {
 public:
@@ -23,10 +24,9 @@ public:
 typedef enum {
 	SEND,
 	VAR,
-	RAND,
 } CCommand_T; //CosmoltiCommand (RAW) {FINAL ONLY, NO AFTER-COMMAND}
 
-std::vector<std::string> CCommands = { "print", "var", "rand"};
+std::vector<std::string> CCommands = { "print", "var"};
 
 class CCommand {
 public:
@@ -62,18 +62,45 @@ namespace Lexer {
 
 	int dictateArgType(std::vector<std::string> args)
 	{
-		std::cout << "Testing: " << args[0] << std::endl;
+		//std::cout << "Testing: " << args[0] << std::endl;
 		if (args[0][0] == '"' || args[0][0] == '\'') //check if its a string
 		{
-			printf("stret");
+			//printf("stret");
 			return 0;
 		}
 		if (Math::MathLex::isDouble(args[0]))
 		{
-			printf("numret");
+			//printf("numret");
 			return 1;
 		}
-		printf("varret");
+		if (CFunction_Area::isCFunction(args[0]))
+		{
+			//printf("funcret");
+			return 3;
+		}
+		//printf("varret");
+		return 2; //assume variable type
+
+	}
+	int dictateArgType(std::string arg)
+	{
+		//std::cout << "Testing: " << arg << std::endl;
+		if (arg[0] == '"' || arg[0] == '\'') //check if its a string
+		{
+			//printf("stret");
+			return 0;
+		}
+		if (Math::MathLex::isDouble(arg))
+		{
+			//printf("numret");
+			return 1;
+		}
+		if (CFunction_Area::isCFunction(arg))
+		{
+			//printf("funcret");
+			return 3;
+		}
+		//printf("varret");
 		return 2; //assume variable type
 
 	}

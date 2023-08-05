@@ -21,16 +21,14 @@ namespace C_FILE {
 		std::ifstream openedFile(filename);
 		if (!openedFile.is_open())
 		{
+			printf("file err");
 			return lines;
 		}
 		std::string line;
 		while (std::getline(openedFile, line))
 		{
-			std::istringstream iss(line);
-			int a, b;
-			if (!(iss >> a >> b)) { break; } // error
 			lines.push_back(line);
-			// process pair (a,b)
 		}
+		return lines;
 	}
 }

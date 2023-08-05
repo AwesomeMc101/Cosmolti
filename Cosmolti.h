@@ -11,7 +11,7 @@ Written by AwesomeMc101
 #include <string.h>
 #include <vector>
 
-#include "cos_file.h"
+//#include "cos_file.h"
 #include "cos_lex.h"
 #include "cos_state.h"
 #include "cos_concat.h"
@@ -82,7 +82,7 @@ namespace Parse {
 			{
 				if (args[i][args[i].length() - 1] == '"' && args[i].length() > 1 || args[i][args[i].length() - 1] == '\'' && args[i].length() > 1)
 				{
-					
+					//printf("Mush1");
 					/*String is opened and closed without a space
 					Ex: 'hello'*/
 
@@ -108,6 +108,104 @@ namespace Parse {
 	
 }
 
+namespace STD_FUNCTIONS {
+	std::string CF_GETTYPE(std::vector<std::string> args)
+	{
+		std::vector<std::string> fakeArgs = { args[0] }; //CHECK THIS ISNT 1
+		int type = Lexer::dictateArgType(fakeArgs); //ngl need to rewrite to take a str arg instead of vector
+
+		switch (type)
+		{
+		case 0:
+			return "STRING"; break;
+		case 1:
+			return "NUMBER"; break;
+		case 2:
+			return "VARIABLE"; break; //(Cant Happen)
+		}
+		return "UNKNOWN_TYPE";
+	}
+
+	std::string CF_STRLEN(std::vector<std::string> args)
+	{
+		//std::cout << "Reading: " << args[0];
+		return std::to_string(args[0].length()); //not writing a whole iteration when C++ has it :heart:
+	}
+
+	std::string CF_RAND(std::vector<std::string> args)
+	{
+		if (Math::MathLex::isDouble(args[0]))
+		{
+			int max = std::stoi(args[0]);
+			int randgen = rand() % max;
+			return std::to_string(randgen);
+		}
+		else
+		{
+			printf("err: rand() no valid maximum. pushing 0");
+			return "0";
+		}
+	}
+
+	std::string callFunction(CFunction c, std::vector<std::string> args)
+	{
+		if (c.cmd_Type == GETTYPE)
+		{
+			return CF_GETTYPE(args);
+		}
+		if (c.cmd_Type == STRLEN)
+		{
+			return CF_STRLEN(args);
+		}
+		if (c.cmd_Type == RAND)
+		{
+			return CF_RAND(args);
+		}
+	}
+}
+
+
+namespace Cosmolt_Correct {
+	std::vector<std::string> correct(std::vector<std::string> args)
+	{
+		args.erase(args.begin());
+
+
+
+		int type = Lexer::dictateArgType(args);
+
+		if (type == 0) //string
+		{
+			args = Parse::mushString(args);
+			args = Concat::concat_args(args); //test for concats
+		}
+		else if (type == 1) //num
+		{
+			args = Math::consultArith(args);
+		}
+		else if (type == 2)
+		{
+			//variable
+			std::string holster = args[0];
+			args.erase(args.begin());
+			int fakeType = Lexer::dictateArgType(args);
+			if (fakeType == 0)
+			{
+				args = Parse::mushString(args);
+				args = Concat::concat_args(args);
+			}
+			else if (fakeType == 1)
+			{
+				args = Math::consultArith(args);
+			}
+			args.insert(args.begin(), holster);
+		}
+
+		return args;
+	}
+}
+
+
 namespace VM {
 	void RUN(CCommand cmd, PStack& permStack)
 	{
@@ -117,6 +215,14 @@ namespace VM {
 			std::cout << "PRINTING: " << cmd.args[0];
 			break;
 		case 1: //DOUBLE ARG (VAR)
+			if (Lexer::dictateArgType(cmd.args[1]) == 3)
+			{
+				std::vector<std::string> fakeArgs = cmd.args;
+				fakeArgs.erase(fakeArgs.begin());
+				fakeArgs = Cosmolt_Correct::correct(fakeArgs);
+				CFunction c = CFunction_Area::getCFunctionFromString(cmd.args[1]);
+				permStack.vMap.emplace(cmd.args[0], STD_FUNCTIONS::callFunction(c, fakeArgs));
+			}
 			permStack.vMap.emplace(cmd.args[0], cmd.args[1]);
 			break;
 		default:
@@ -174,6 +280,28 @@ void cosmolt_execute(std::vector<std::string> lines, PStack& permStack)
 				args = Math::consultArith(args);
 			}
 			args.insert(args.begin(), holster);
+		}
+		else if (cmd.argType == 3) //function
+		{
+			std::vector<std::string> fakeArgs = Cosmolt_Correct::correct(args);
+
+
+			/* ^^^^
+			Because the main arg-type is a Function type, strings won't get mushed and numbers won't be added. So,
+			we need to do a second function where is skips the function arg and reads over the type args, this time
+			correcting them so the function can execute with correct details. 
+			
+			AKA
+			
+			print: strlen "Hello World"
+
+			Without the corrector, the strings wouldn't mush, and strlen would only read "Hello", no " World".
+			With the corrector, strings are mushed and it reads the full string.
+
+			*/
+			CFunction c = CFunction_Area::getCFunctionFromString(args[0]);
+			//args.insert(args.begin(), )
+			args.insert(args.begin(), STD_FUNCTIONS::callFunction(c, fakeArgs));
 		}
 
 		cmd.args = args;
