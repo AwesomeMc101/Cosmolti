@@ -1,3 +1,11 @@
+
+/*
+
+cos_func.h
+
+Written by AwesomeMc101
+
+*/
 #include <map>
 #include <vector>
 #include <string>
@@ -8,10 +16,11 @@
 typedef enum {
 	GETTYPE,
 	STRLEN,
-	RAND
+	RAND,
+	VECSIZE,
 } CFunction_T;
 
-std::vector<std::string> CFunctions = { "gettype", "strlen", "rand"};
+std::vector<std::string> CFunctions = { "gettype", "strlen", "rand", "vecsize"};
 
 class CFunction {
 public:
@@ -48,6 +57,11 @@ namespace CFunction_Area {
 		case 2:
 			c.arg_Count = 1;
 			c.cmd_Type = RAND;
+			break;
+		case 3:
+			c.arg_Count = 1;
+			c.cmd_Type = VECSIZE;
+			break;
 		}
 		return c;
 	}
@@ -58,10 +72,12 @@ namespace CFunction_Area {
 		{
 			if (CFunctions[i] == arg)
 			{
-				std::cout << "CFunc Returner: " << CFunctions[i] << std::endl;
+				//std::cout << "CFunc Returner: " << CFunctions[i] << std::endl;
 				return createCFunction(i);
 			}
 		}
 	}
 }
+
+
 

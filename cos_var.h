@@ -16,6 +16,9 @@ Written by AwesomeMc101
 
 namespace Variable
 {
+
+
+
 	std::vector<std::string> implementVariables(std::vector<std::string> args,
 		std::map<std::string, std::string> vars)
 	{
@@ -24,7 +27,7 @@ namespace Variable
 			auto narg = vars.find(args[i]);
 			if (narg == vars.end()) { continue; }
 
-			if (Math::MathLex::isNum(narg->second))
+			if (Math::MathLex::isDouble(narg->second))
 			{
 				args[i] = narg->second;
 			}

@@ -18,7 +18,7 @@ int main()
     int type = 1;
     std::cin >> type;
     system("cls");
-    std::cout << "Running Cosmolti 0.2\n\n";
+    std::cout << "Running Cosmolti 0.3\n\n";
 
     if (type == 1)
     {
@@ -41,6 +41,8 @@ int main()
             {
                 cosmolt_execute(lines, pStack);
                 lines.clear();
+                pStack.vecMap.clear();
+                pStack.vMap.clear();
                 std::cin.get();
             }
             else

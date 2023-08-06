@@ -26,4 +26,5 @@ class PStack /*PermStack*/ {
 public:
 	/*variable sector*/
 	std::map<std::string, std::string> vMap;
+	std::map<std::string, std::vector<std::string>> vecMap;
 };

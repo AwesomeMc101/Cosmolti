@@ -111,8 +111,8 @@ namespace Parse {
 namespace STD_FUNCTIONS {
 	std::string CF_GETTYPE(std::vector<std::string> args)
 	{
-		std::vector<std::string> fakeArgs = { args[0] }; //CHECK THIS ISNT 1
-		int type = Lexer::dictateArgType(fakeArgs); //ngl need to rewrite to take a str arg instead of vector
+		//std::vector<std::string> fakeArgs = { args[0] }; //CHECK THIS ISNT 1
+		int type = Lexer::dictateArgType(args[0]); //ngl need to rewrite to take a str arg instead of vector
 
 		switch (type)
 		{
@@ -147,7 +147,19 @@ namespace STD_FUNCTIONS {
 		}
 	}
 
-	std::string callFunction(CFunction c, std::vector<std::string> args)
+	std::string CF_VECSIZE(std::vector<std::string> args, PStack& permStack)
+	{
+		if (C_Vector::isCVector(args[0], permStack.vecMap))
+		{
+			return std::to_string(permStack.vecMap[args[0]].size());
+		}
+		else
+		{
+			return "err: no such vector";
+		}
+	}
+
+	std::string callFunction(CFunction c, std::vector<std::string> args, PStack& permStack)
 	{
 		if (c.cmd_Type == GETTYPE)
 		{
@@ -161,18 +173,22 @@ namespace STD_FUNCTIONS {
 		{
 			return CF_RAND(args);
 		}
+		if (c.cmd_Type == VECSIZE)
+		{
+			return CF_VECSIZE(args, permStack);
+		}
 	}
 }
 
 
 namespace Cosmolt_Correct {
-	std::vector<std::string> correct(std::vector<std::string> args)
+	std::vector<std::string> correct(std::vector<std::string> args, PStack& permStack)
 	{
 		args.erase(args.begin());
 
 
 
-		int type = Lexer::dictateArgType(args);
+		int type = Lexer::dictateArgType(args, permStack.vecMap);
 
 		if (type == 0) //string
 		{
@@ -181,14 +197,14 @@ namespace Cosmolt_Correct {
 		}
 		else if (type == 1) //num
 		{
-			args = Math::consultArith(args);
+			args = Math::consultArith(args, false);
 		}
 		else if (type == 2)
 		{
 			//variable
 			std::string holster = args[0];
 			args.erase(args.begin());
-			int fakeType = Lexer::dictateArgType(args);
+			int fakeType = Lexer::dictateArgType(args, permStack.vecMap);
 			if (fakeType == 0)
 			{
 				args = Parse::mushString(args);
@@ -196,7 +212,7 @@ namespace Cosmolt_Correct {
 			}
 			else if (fakeType == 1)
 			{
-				args = Math::consultArith(args);
+				args = Math::consultArith(args, false);
 			}
 			args.insert(args.begin(), holster);
 		}
@@ -209,21 +225,28 @@ namespace Cosmolt_Correct {
 namespace VM {
 	void RUN(CCommand cmd, PStack& permStack)
 	{
+		std::string holster = cmd.args[0];
 		switch (cmd.cmd_Type)
 		{
 		case 0: // SINGLE ARG (PRINT)
-			std::cout << "PRINTING: " << cmd.args[0];
+			std::cout << "PRINTING: " << cmd.args[0] << std::endl;
 			break;
 		case 1: //DOUBLE ARG (VAR)
 			if (Lexer::dictateArgType(cmd.args[1]) == 3)
 			{
 				std::vector<std::string> fakeArgs = cmd.args;
 				fakeArgs.erase(fakeArgs.begin());
-				fakeArgs = Cosmolt_Correct::correct(fakeArgs);
+				fakeArgs = Cosmolt_Correct::correct(fakeArgs, permStack);
 				CFunction c = CFunction_Area::getCFunctionFromString(cmd.args[1]);
-				permStack.vMap.emplace(cmd.args[0], STD_FUNCTIONS::callFunction(c, fakeArgs));
+				permStack.vMap.emplace(cmd.args[0], STD_FUNCTIONS::callFunction(c, fakeArgs, permStack));
 			}
+			permStack.vMap.erase(cmd.args[0]); //in case of redefine, easily delete the beginning value
 			permStack.vMap.emplace(cmd.args[0], cmd.args[1]);
+			break;
+		case 2: //INF ARG (VECTOR)
+			cmd.args.erase(cmd.args.begin());
+			permStack.vecMap.erase(cmd.args[0]); //idk why this isnt working cba to fix
+			permStack.vecMap.emplace(holster, cmd.args);
 			break;
 		default:
 			std::cout << "ERROR: NO SUCH COMMAND" << std::endl;
@@ -236,7 +259,6 @@ void cosmolt_execute(std::vector<std::string> lines, PStack& permStack)
 {
 	for (std::string line : lines)
 	{
-		printf("\n\nNEWLINE\n\n");
 		TStack tempStack;
 		std::vector<std::string> code = Parse::parse(line);
 		
@@ -249,11 +271,43 @@ void cosmolt_execute(std::vector<std::string> lines, PStack& permStack)
 		/* Begin work on arguments */
 		/* First, artificially implement real values for variable calls. */
 
-		args = Variable::implementVariables(args, permStack.vMap);
+		if (cmd.cmd_Type != VAR)
+		{
+			args = Variable::implementVariables(args, permStack.vMap);
+		}
+		else
+		{
+			std::string holster = args[0]; //variable name
+			args.erase(args.begin()); //remove var name
+			args = Variable::implementVariables(args, permStack.vMap); 
+			/* ^^^^
+			
+			We still need to implement the rest of the variables to allow stuff like math or concat in the var def
+			AKA
+			var: x x + 5
+			The second X still needs to be defined.
+
+			*/
+			args.insert(args.begin(), holster); // Re-insert var name without implementing it
+		}
+
+		/* Implement vector values. */
+
+		if (cmd.cmd_Type != VECTOR)
+		{
+			args = C_Vector::implementVectors(args, permStack.vecMap);
+		}
+		else //same concept as variables
+		{
+			std::string holster = args[0]; //vector name
+			args.erase(args.begin()); //remove vector name
+			args = C_Vector::implementVectors(args, permStack.vecMap);
+			args.insert(args.begin(), holster); 
+		}
 
 		/* Fix strings etc */
 
-		cmd.argType = Lexer::dictateArgType(args);
+		cmd.argType = Lexer::dictateArgType(args, permStack.vecMap);
 		if (cmd.argType == 0) //string
 		{
 			args = Parse::mushString(args);
@@ -262,14 +316,14 @@ void cosmolt_execute(std::vector<std::string> lines, PStack& permStack)
 		}
 		else if (cmd.argType == 1) //num
 		{
-			args = Math::consultArith(args);
+			args = Math::consultArith(args, (cmd.cmd_Type == VECTOR));
 		}
 		else if (cmd.argType == 2)
 		{
 			//variable
-			std::string holster = args[0];
+			std::string holster = args[0]; //set a string for the var name
 			args.erase(args.begin());
-			int fakeType = Lexer::dictateArgType(args);
+			int fakeType = Lexer::dictateArgType(args, permStack.vecMap);
 			if (fakeType == 0)
 			{
 				args = Parse::mushString(args);
@@ -277,13 +331,13 @@ void cosmolt_execute(std::vector<std::string> lines, PStack& permStack)
 			}
 			else if (fakeType == 1)
 			{
-				args = Math::consultArith(args);
+				args = Math::consultArith(args, (cmd.cmd_Type == VECTOR));
 			}
 			args.insert(args.begin(), holster);
 		}
 		else if (cmd.argType == 3) //function
 		{
-			std::vector<std::string> fakeArgs = Cosmolt_Correct::correct(args);
+			std::vector<std::string> fakeArgs = Cosmolt_Correct::correct(args, permStack);
 
 
 			/* ^^^^
@@ -301,7 +355,23 @@ void cosmolt_execute(std::vector<std::string> lines, PStack& permStack)
 			*/
 			CFunction c = CFunction_Area::getCFunctionFromString(args[0]);
 			//args.insert(args.begin(), )
-			args.insert(args.begin(), STD_FUNCTIONS::callFunction(c, fakeArgs));
+			args.insert(args.begin(), STD_FUNCTIONS::callFunction(c, fakeArgs, permStack));
+		}
+		else if (cmd.argType == 4) //vector
+		{
+			std::string holster = args[0]; //set a string for the var name
+			args.erase(args.begin());
+			int fakeType = Lexer::dictateArgType(args, permStack.vecMap);
+			if (fakeType == 0)
+			{
+				args = Parse::mushString(args);
+				args = Concat::concat_args(args);
+			}
+			else if (fakeType == 1)
+			{
+				args = Math::consultArith(args, (cmd.cmd_Type == VECTOR));
+			}
+			args.insert(args.begin(), holster);
 		}
 
 		cmd.args = args;

@@ -15,6 +15,7 @@ Written by AwesomeMc101
 
 #include "cos_var.h"
 #include "cos_func.h"
+#include "cos_vector.h"
 
 class lexedCode {
 public:
@@ -24,9 +25,10 @@ public:
 typedef enum {
 	SEND,
 	VAR,
+	VECTOR,
 } CCommand_T; //CosmoltiCommand (RAW) {FINAL ONLY, NO AFTER-COMMAND}
 
-std::vector<std::string> CCommands = { "print", "var"};
+std::vector<std::string> CCommands = { "print", "var", "vector"};
 
 class CCommand {
 public:
@@ -60,11 +62,12 @@ namespace Lexer {
 		}
 	}
 
-	int dictateArgType(std::vector<std::string> args)
+	int dictateArgType(std::vector<std::string> args, std::map<std::string, std::vector<std::string>> vecMap)
 	{
 		//std::cout << "Testing: " << args[0] << std::endl;
 		if (args[0][0] == '"' || args[0][0] == '\'') //check if its a string
 		{
+			//std::cout << "Scanned " << args[0] << " as string." << std::endl;
 			//printf("stret");
 			return 0;
 		}
@@ -77,6 +80,10 @@ namespace Lexer {
 		{
 			//printf("funcret");
 			return 3;
+		}
+		if (C_Vector::isCVector(args[0], vecMap))
+		{
+			return 4;
 		}
 		//printf("varret");
 		return 2; //assume variable type

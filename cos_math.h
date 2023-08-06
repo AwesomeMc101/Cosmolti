@@ -57,7 +57,7 @@ namespace Math
 			return false;
 		}
 	}
-	std::vector<std::string> consultArith(std::vector<std::string> args)
+	std::vector<std::string> consultArith(std::vector<std::string> args, bool is_Vector)
 	{
 		/*
 		1
@@ -83,7 +83,7 @@ namespace Math
 
 						double solution = a + b;
 
-						nargs.clear();
+						if (!is_Vector) { nargs.clear(); }
 						nargs.push_back(std::to_string(solution));
 						args[i + 1] = std::to_string(solution);
 					}
@@ -101,7 +101,7 @@ namespace Math
 
 						double solution = a - b;
 
-						nargs.clear();
+						if (!is_Vector) { nargs.clear(); }
 						nargs.push_back(std::to_string(solution));
 						args[i + 1] = std::to_string(solution);;
 					}
@@ -119,7 +119,7 @@ namespace Math
 
 						double solution = a * b;
 
-						nargs.clear();
+						if (!is_Vector) { nargs.clear(); }
 						nargs.push_back(std::to_string(solution));
 						args[i + 1] = std::to_string(solution);;
 					}
@@ -138,7 +138,7 @@ namespace Math
 
 						double solution = a / b;
 
-						nargs.clear();
+						if (!is_Vector) { nargs.clear(); }
 						nargs.push_back(std::to_string(solution));
 						args[i + 1] = std::to_string(solution);;
 					}
@@ -156,13 +156,13 @@ namespace Math
 
 						double solution = pow(a,b);
 
-						nargs.clear();
+						if (!is_Vector) { nargs.clear(); }
 						nargs.push_back(std::to_string(solution));
 						args[i + 1] = std::to_string(solution);;
 					}
 					else
 					{
-						printf("err: DIVERROR\n");
+						printf("err: POWERROR\n");
 					}
 				}
 			}
